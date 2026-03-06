@@ -482,26 +482,37 @@ async function sendToAI() {
   const tzOffset = now.getTimezoneOffset() * 60000;
   const localISO = new Date(now - tzOffset).toISOString().split('T')[0];
 
-  const systemPrompt = `You are a productivity expert. 
-Current Date & Time: ${now.toLocaleString(undefined, options)}.
-Today's Date is: ${localISO}
+  const systemPrompt = `You are a productivity AI.
+Current Date/Time: ${now.toLocaleString(undefined, options)}
+Today's Date: ${localISO}
 
-Current task list (id, title, completed):
+Current tasks:
 ${JSON.stringify(todos.map(t => ({id: t.id, title: t.title, completed: t.completed})), null, 2)}
 
-If the user wants to create, update, or delete a task, you MUST include a 'suggested_actions' array in your JSON output.
-JSON SCHEMA:
+OUTPUT FORMAT RULES:
+You must ALWAYS respond with ONLY valid JSON matching this exact structure:
 {
-  "message": "Short conversational response",
+  "message": "A brief conversational reply.",
   "suggested_actions": [
-    { "type": "CreateTask", "data": { "title": "Exact title", "description": "", "priority": "High|Medium|Low", "tags": [], "due_date": "YYYY-MM-DD" } }
+    {
+      "type": "CreateTask",
+      "data": {
+        "title": "Task title",
+        "description": "",
+        "priority": "High|Medium|Low",
+        "tags": [],
+        "due_date": "YYYY-MM-DD"
+      }
+    },
+    { "type": "UpdateTask", "data": { "id": "task_id", "completed": true } },
+    { "type": "DeleteTask", "data": "task_id" }
   ]
 }
 
 CRITICAL RULES:
-1. DO NOT invent or hallucinate a 'description' for tasks. It MUST be an empty string "" unless the user explicitly dictated a longer description.
-2. When the user asks for relative times (like "tomorrow" or "two weeks from now"), you MUST do the calendar math based on Today's Date (${localISO}) and output the EXACT target date in "YYYY-MM-DD" format for "due_date".
-3. ONLY respond with valid JSON.`;
+1. "description" MUST ALWAYS BE EMPTY ("") unless the user explicitly gave you a long paragraph to use as a description. Do NOT invent descriptions!
+2. "due_date" MUST BE exactly "YYYY-MM-DD" based on counting days from Today (${localISO}). If no date is mentioned, use "".
+3. Return ONLY valid JSON. No markdown formatting.`;
 
   try {
     const thinkingMsg = appendMessage("ai", "Assistant is thinking");
@@ -518,7 +529,21 @@ CRITICAL RULES:
     thinkingMsg.remove();
 
     try {
-      const data = JSON.parse(rawResponse);
+      let jsonString = rawResponse.trim();
+      // Remove any markdown code block wrappings that small LLMs might output
+      if (jsonString.startsWith("```json")) {
+          jsonString = jsonString.slice(7).trim();
+          if (jsonString.endsWith("```")) {
+              jsonString = jsonString.slice(0, -3).trim();
+          }
+      } else if (jsonString.startsWith("```")) {
+          jsonString = jsonString.slice(3).trim();
+          if (jsonString.endsWith("```")) {
+              jsonString = jsonString.slice(0, -3).trim();
+          }
+      }
+
+      const data = JSON.parse(jsonString);
       if (data.message) appendMessage("ai", data.message);
 
       if (data.suggested_actions && Array.isArray(data.suggested_actions)) {
