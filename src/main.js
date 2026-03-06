@@ -63,7 +63,7 @@ async function loadTodos() {
 }
 
 function renderTodos() {
-  todoContainer.innerHTML = todos.map(todo => {
+  todoContainer.innerHTML = todos.map((todo, index) => {
     const dueStr = todo.due_date ? new Date(todo.due_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null;
     const isMagic = todo.tags.some(t => t.toLowerCase() === 'magic' || t.toLowerCase() === 'ai');
 
@@ -101,6 +101,7 @@ function renderTodos() {
            <button class="btn-ghost" onclick="deleteTodo('${todo.id}')" title="Delete"><span class="material-symbols-outlined" style="color: #ef4444;">delete</span></button>
         </div>
       </div>
+      ${index < todos.length - 1 ? '<div style="height: 1px; background: var(--border); margin: 0.25rem 1rem; opacity: 0.5;"></div>' : ''}
     `;
   }).join('');
 }
