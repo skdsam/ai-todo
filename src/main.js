@@ -34,6 +34,14 @@ const taskTagsInput = document.getElementById("task-input-tags");
 const saveTaskBtn = document.getElementById("save-task-btn");
 const closeTaskBtn = document.getElementById("close-task-btn");
 
+const viewTaskModal = document.getElementById("view-task-modal");
+const closeViewBtn = document.getElementById("close-view-btn");
+const viewTaskTitle = document.getElementById("view-task-title");
+const viewTaskMeta = document.getElementById("view-task-meta");
+const viewTaskDesc = document.getElementById("view-task-desc");
+const viewTaskEditBtn = document.getElementById("view-task-edit-btn");
+let currentViewId = null;
+
 // --- UI / Resize Logic ---
 
 const resizer = document.getElementById("resizer");
@@ -72,7 +80,7 @@ function renderTodos() {
       <div class="task-item ${isMagic ? 'magic-task' : ''} ${todo.completed ? 'opacity-50 grayscale' : ''}">
         <div class="custom-checkbox ${todo.completed ? 'checked' : ''}" onclick="toggleTodo('${todo.id}')"></div>
         
-        <div style="flex: 1; display: flex; flex-direction: column;">
+        <div style="flex: 1; display: flex; flex-direction: column; cursor: pointer; padding: 4px 0;" onclick="viewTodo('${todo.id}')">
           <div style="display: flex; align-items: center; gap: 0.5rem;">
             <span style="font-size: 1rem; font-weight: 500; ${todo.completed ? 'text-decoration: line-through' : ''}">${todo.title}</span>
             ${isMagic ? `<span class="magic-badge"><span class="material-symbols-outlined" style="font-size: 12px; font-variation-settings: 'FILL' 1;">magic_button</span> Magic</span>` : ''}
@@ -168,6 +176,30 @@ window.editTodo = (id) => {
     
     taskModal.style.display = "flex";
     taskTitleInput.focus();
+};
+
+window.viewTodo = (id) => {
+    const todo = todos.find(t => t.id === id);
+    if (!todo) return;
+    
+    currentViewId = id;
+    viewTaskTitle.innerText = todo.title;
+    viewTaskDesc.innerText = todo.description || "No description provided.";
+    
+    let metaHtml = "";
+    if (todo.due_date) {
+        const dueStr = new Date(todo.due_date).toLocaleTimeString([], { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+        metaHtml += `<span style="font-size: 0.75rem; color: #64748b; display: flex; align-items: center; gap: 4px; background: var(--bg-light); border: 1px solid var(--border); padding: 4px 8px; border-radius: 6px;"><span class="material-symbols-outlined" style="font-size: 14px;">schedule</span> ${dueStr}</span>`;
+    }
+    
+    metaHtml += `<span style="font-size: 0.75rem; font-weight: 700; color: ${todo.priority === 'High' ? '#e11d48' : '#64748b'}; background: ${todo.priority === 'High' ? '#ffe4e6' : 'var(--bg-light)'}; border: 1px solid ${todo.priority === 'High' ? '#fecdd3' : 'var(--border)'}; padding: 4px 8px; border-radius: 6px;">${todo.priority.toUpperCase()}</span>`;
+    
+    todo.tags.forEach(tag => {
+        metaHtml += `<span style="font-size: 0.75rem; color: #64748b; display: flex; align-items: center; gap: 4px; background: var(--bg-light); border: 1px solid var(--border); padding: 4px 8px; border-radius: 6px;"><span class="material-symbols-outlined" style="font-size: 14px;">sell</span> ${tag}</span>`;
+    });
+    
+    viewTaskMeta.innerHTML = metaHtml;
+    viewTaskModal.style.display = "flex";
 };
 
 // --- Theme Logic ---
@@ -498,6 +530,20 @@ async function deleteModel(id) {
 
 document.getElementById("add-todo-btn")?.addEventListener("click", openTaskModal);
 document.getElementById("close-task-btn")?.addEventListener("click", closeTaskModal);
+
+if (closeViewBtn) {
+    closeViewBtn.addEventListener("click", () => {
+        viewTaskModal.style.display = "none";
+    });
+}
+if (viewTaskEditBtn) {
+    viewTaskEditBtn.addEventListener("click", () => {
+        viewTaskModal.style.display = "none";
+        if (currentViewId) {
+            editTodo(currentViewId);
+        }
+    });
+}
 
 if(openForgeBtn) {
     openForgeBtn.addEventListener("click", () => {
