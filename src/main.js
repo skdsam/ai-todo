@@ -8,6 +8,7 @@ let currentModelId = localStorage.getItem("ai_todo_model_id");
 let currentEditId = null;
 let currentFilter = "today";
 let sortByPriority = false;
+let sortByAlpha = false;
 
 const chatBox = document.getElementById("chat-box");
 const aiInput = document.getElementById("sidebar-ai-input");
@@ -128,6 +129,10 @@ function renderTodos() {
       const priorityLevels = { 'High': 3, 'Medium': 2, 'Low': 1 };
       filteredTodos = filteredTodos.sort((a, b) => {
           return (priorityLevels[b.priority] || 0) - (priorityLevels[a.priority] || 0);
+      });
+  } else if (sortByAlpha) {
+      filteredTodos = filteredTodos.sort((a, b) => {
+          return a.title.toLowerCase().localeCompare(b.title.toLowerCase());
       });
   }
 
@@ -647,15 +652,41 @@ document.getElementById("add-todo-btn")?.addEventListener("click", openTaskModal
 document.getElementById("close-task-btn")?.addEventListener("click", closeTaskModal);
 
 const filterPriorityBtn = document.getElementById("filter-priority-btn");
+const sortAlphaBtn = document.getElementById("sort-alpha-btn");
+
 if (filterPriorityBtn) {
     filterPriorityBtn.addEventListener("click", () => {
         sortByPriority = !sortByPriority;
         if (sortByPriority) {
+            sortByAlpha = false;
             filterPriorityBtn.style.color = "var(--primary)";
             filterPriorityBtn.style.backgroundColor = "var(--bg-sidebar)";
+            if (sortAlphaBtn) {
+                sortAlphaBtn.style.color = "var(--text-secondary)";
+                sortAlphaBtn.style.backgroundColor = "transparent";
+            }
         } else {
             filterPriorityBtn.style.color = "var(--text-secondary)";
             filterPriorityBtn.style.backgroundColor = "transparent";
+        }
+        renderTodos();
+    });
+}
+
+if (sortAlphaBtn) {
+    sortAlphaBtn.addEventListener("click", () => {
+        sortByAlpha = !sortByAlpha;
+        if (sortByAlpha) {
+            sortByPriority = false;
+            sortAlphaBtn.style.color = "var(--primary)";
+            sortAlphaBtn.style.backgroundColor = "var(--bg-sidebar)";
+            if (filterPriorityBtn) {
+                filterPriorityBtn.style.color = "var(--text-secondary)";
+                filterPriorityBtn.style.backgroundColor = "transparent";
+            }
+        } else {
+            sortAlphaBtn.style.color = "var(--text-secondary)";
+            sortAlphaBtn.style.backgroundColor = "transparent";
         }
         renderTodos();
     });
