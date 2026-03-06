@@ -479,21 +479,29 @@ async function sendToAI() {
 
   const now = new Date();
   const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric' };
-  const systemPrompt = `You are a productivity expert. Current local time: ${now.toLocaleString(undefined, options)}.
-Current tasks:
-${JSON.stringify(todos, null, 2)}
+  const tzOffset = now.getTimezoneOffset() * 60000;
+  const localISO = new Date(now - tzOffset).toISOString().split('T')[0];
 
-If the user wants to create, update, or delete a task, you MUST include a 'suggested_actions' array in your JSON response.
+  const systemPrompt = `You are a productivity expert. 
+Current Date & Time: ${now.toLocaleString(undefined, options)}.
+Today's Date is: ${localISO}
+
+Current task list (id, title, completed):
+${JSON.stringify(todos.map(t => ({id: t.id, title: t.title, completed: t.completed})), null, 2)}
+
+If the user wants to create, update, or delete a task, you MUST include a 'suggested_actions' array in your JSON output.
 JSON SCHEMA:
 {
-  "message": "Conversational response",
+  "message": "Short conversational response",
   "suggested_actions": [
-    { "type": "CreateTask", "data": { "title": "...", "description": "...", "priority": "High|Medium|Low", "tags": [], "due_date": "YYYY-MM-DD or null" } },
-    { "type": "UpdateTask", "data": { "id": "...", "completed": true, "due_date": "..." } },
-    { "type": "DeleteTask", "data": "id" }
+    { "type": "CreateTask", "data": { "title": "Exact title", "description": "", "priority": "High|Medium|Low", "tags": [], "due_date": "YYYY-MM-DD" } }
   ]
 }
-Always reply in valid JSON if actions are needed. Otherwise, just reply with a "message" field in JSON.`;
+
+CRITICAL RULES:
+1. DO NOT invent or hallucinate a 'description' for tasks. It MUST be an empty string "" unless the user explicitly dictated a longer description.
+2. When the user asks for relative times (like "tomorrow" or "two weeks from now"), you MUST do the calendar math based on Today's Date (${localISO}) and output the EXACT target date in "YYYY-MM-DD" format for "due_date".
+3. ONLY respond with valid JSON.`;
 
   try {
     const thinkingMsg = appendMessage("ai", "Assistant is thinking");
