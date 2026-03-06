@@ -498,10 +498,10 @@ You must ALWAYS respond with ONLY valid JSON matching this exact structure:
       "type": "CreateTask",
       "data": {
         "title": "Task title",
-        "description": "",
+        "description": "Any requested description or null",
         "priority": "High|Medium|Low",
         "tags": [],
-        "due_date": "YYYY-MM-DD"
+        "due_date": "YYYY-MM-DD or null"
       }
     },
     { "type": "UpdateTask", "data": { "id": "task_id", "completed": true } },
@@ -567,10 +567,13 @@ CRITICAL RULES:
                 if (isNaN(due_date)) due_date = null;
             }
 
+            let processedDesc = action.data.description || "";
+            if (processedDesc.toLowerCase() === "null") processedDesc = "";
+
             const newTodo = {
               id: crypto.randomUUID(),
               title: action.data.title,
-              description: action.data.description || "",
+              description: processedDesc,
               completed: false,
               priority: action.data.priority || "Medium",
               tags: action.data.tags || [],
