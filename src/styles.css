@@ -196,7 +196,6 @@ button .material-symbols-outlined {
 
 /* Task Cards */
 .task-list {
-  max-width: 900px;
   padding: 0 2.5rem 5rem 2.5rem;
   display: flex;
   flex-direction: column;
