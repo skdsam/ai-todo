@@ -12,6 +12,7 @@ const sendBtn = document.getElementById("sidebar-send-btn");
 const todoContainer = document.getElementById("todo-container");
 const aiStatusDot = document.getElementById("ai-status-dot");
 const aiStatusText = document.getElementById("ai-status-text");
+const aiModelName = document.getElementById("ai-model-name");
 
 const forgeModal = document.getElementById("forge-modal");
 const openForgeBtn = document.getElementById("open-forge-btn");
@@ -365,14 +366,16 @@ async function checkModelStatus() {
   if (active) {
     aiStatusDot.style.background = "#10b981"; // green
     aiStatusText.innerText = "READY";
-    appendMessage("ai", `Connected to ${active.info.name}`);
+    aiModelName.innerText = `Connected to ${active.info.name}`;
     await invoke("start_llama_server", { customModelPath: active.path }).catch(() => {
         aiStatusDot.style.background = "#f59e0b"; // yellow error 
         aiStatusText.innerText = "ERROR";
+        aiModelName.innerText = "Failed to start server";
     });
   } else {
     aiStatusDot.style.background = "#ef4444"; // red
     aiStatusText.innerText = "OFFLINE";
+    aiModelName.innerText = "No model selected";
   }
   renderForge();
 }
