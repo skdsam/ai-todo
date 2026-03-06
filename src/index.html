@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="stylesheet" href="./styles.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Todo</title>
+</head>
+
+<body>
+  <div id="app">
+    <!-- AI Sidebar -->
+    <aside class="sidebar">
+      <nav class="top-nav">
+        <button id="open-forge-btn" class="nav-icon-btn" title="Manage AI Models">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2a10 10 0 0 0-10 10c0 5.522 4.478 10 10 10s10-4.478 10-10A10 10 0 0 0 12 2z" />
+            <path d="M12 18a6 6 0 1 0 0-12 6 6 0 0 0 0 12z" />
+            <circle cx="12" cy="12" r="2" />
+          </svg>
+        </button>
+        <button id="open-theme-btn" class="nav-icon-btn" title="Themes & Customization">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5" />
+            <path d="M12 1v2" />
+            <path d="M12 21v2" />
+            <path d="M4.22 4.22l1.42 1.42" />
+            <path d="M18.36 18.36l1.42 1.42" />
+            <path d="M1 12h2" />
+            <path d="M21 12h2" />
+            <path d="M4.22 19.78l1.42-1.42" />
+            <path d="M18.36 5.64l1.42-1.42" />
+          </svg>
+        </button>
+      </nav>
+
+      <div class="model-status-wrapper">
+        <div class="model-selector" id="model-status">
+          🤖 Checking AI Models...
+        </div>
+      </div>
+
+      <div class="chat-container" id="chat-box">
+        <div class="message ai">
+          Hello! I'm your AI productivity assistant. How can I help you manage your tasks today?
+        </div>
+      </div>
+
+      <footer class="chat-footer">
+        <div class="input-group">
+          <textarea id="ai-input" placeholder="How can I help?" rows="1"></textarea>
+          <button id="send-ai-btn">Send Message</button>
+        </div>
+      </footer>
+    </aside>
+    <div id="resizer" class="resizer"></div>
+    <!-- Main Todo View -->
+    <main class="main-content">
+      <header class="todo-header">
+        <h1>My Tasks</h1>
+        <button id="add-todo-btn">+ New Task</button>
+      </header>
+
+      <div class="todo-list" id="todo-container">
+        <!-- Tasks will be injected here -->
+      </div>
+    </main>
+  </div>
+
+  <!-- AI Forge Modal -->
+  <div id="forge-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content" style="max-width: 800px; width: 90%;">
+      <div class="todo-header">
+        <h2>The AI Forge</h2>
+        <button id="close-forge-btn" class="close-btn">&times;</button>
+      </div>
+      <p style="color: var(--text-secondary); margin-bottom: 2rem;">
+        Download and manage local LLMs. Smaller models (under 3B) are recommended for most systems.
+      </p>
+
+      <div id="forge-list" class="todo-list">
+        <!-- Models will be listed here -->
+      </div>
+    </div>
+  </div>
+
+  <!-- New/Edit Task Modal -->
+  <div id="task-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content" style="max-width: 500px; width: 90%;">
+      <div class="todo-header">
+        <h2 id="task-modal-title">New Task</h2>
+        <button id="close-task-btn" class="close-btn">&times;</button>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 1rem;">
+        <div>
+          <label
+            style="display: block; margin-bottom: 0.5rem; font-size: 0.8rem; color: var(--text-secondary)">TITLE</label>
+          <input type="text" id="task-input-title" placeholder="What needs to be done?"
+            style="width: 100%; box-sizing: border-box;" />
+        </div>
+
+        <div>
+          <label
+            style="display: block; margin-bottom: 0.5rem; font-size: 0.8rem; color: var(--text-secondary)">DESCRIPTION</label>
+          <textarea id="task-input-desc" placeholder="Add more details..." rows="3"
+            style="width: 100%; box-sizing: border-box;"></textarea>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div>
+            <label
+              style="display: block; margin-bottom: 0.5rem; font-size: 0.8rem; color: var(--text-secondary)">PRIORITY</label>
+            <select id="task-input-priority"
+              style="width: 100%; background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border); padding: 0.75rem; border-radius: 8px;">
+              <option value="Low">Low</option>
+              <option value="Medium" selected>Medium</option>
+              <option value="High">High</option>
+            </select>
+          </div>
+          <div>
+            <label style="display: block; margin-bottom: 0.5rem; font-size: 0.8rem; color: var(--text-secondary)">TARGET
+              COMPLETION</label>
+            <input type="date" id="task-input-due" style="width: 100%; box-sizing: border-box;" />
+          </div>
+        </div>
+
+        <div>
+          <label style="display: block; margin-bottom: 0.5rem; font-size: 0.8rem; color: var(--text-secondary)">TAGS
+            (COMMA SEPARATED)</label>
+          <input type="text" id="task-input-tags" placeholder="Work, Home, Bug"
+            style="width: 100%; box-sizing: border-box;" />
+        </div>
+
+        <button id="save-task-btn" style="margin-top: 1rem; width: 100%;">Create Task</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Theme Modal -->
+  <div id="theme-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content" style="max-width: 450px; width: 90%;">
+      <div class="todo-header">
+        <h2>Themes</h2>
+        <button id="close-theme-btn" class="close-btn">&times;</button>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 1rem;">
+        <div>
+          <label style="display: block; margin-bottom: 0.5rem; font-size: 0.8rem; color: var(--text-secondary)">SELECT
+            THEME</label>
+          <select id="theme-selector" style="width: 100%; box-sizing: border-box;"></select>
+        </div>
+
+        <div style="border-top: 1px solid var(--border); padding-top: 1rem;">
+          <h3 style="margin-bottom: 1rem; font-size: 0.9rem; color: var(--text-secondary)">CREATE CUSTOM THEME</h3>
+          <div style="display: flex; flex-direction: column; gap: 1rem;">
+            <div>
+              <label
+                style="display: block; margin-bottom: 0.5rem; font-size: 0.8rem; color: var(--text-secondary)">THEME
+                NAME</label>
+              <input type="text" id="theme-custom-name" placeholder="e.g. My Neon Theme"
+                style="width: 100%; box-sizing: border-box;" />
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+              <div class="color-pick-row">
+                <label>Background</label>
+                <input type="color" id="theme-color-bg" value="#0f172a" />
+              </div>
+              <div class="color-pick-row">
+                <label>Cards</label>
+                <input type="color" id="theme-color-card" value="#1e293b" />
+              </div>
+              <div class="color-pick-row">
+                <label>Accent</label>
+                <input type="color" id="theme-color-accent" value="#38bdf8" />
+              </div>
+              <div class="color-pick-row">
+                <label>Text</label>
+                <input type="color" id="theme-color-text" value="#f8fafc" />
+              </div>
+            </div>
+            <button id="save-custom-theme-btn" style="margin-top: 0.5rem; width: 100%;">Save Theme</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/main.js"></script>
+</body>
+
+</html>
