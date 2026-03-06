@@ -77,12 +77,14 @@ async function loadTodos() {
 function updateBadges() {
   const now = new Date();
   now.setHours(0, 0, 0, 0);
+  const startOfToday = now.getTime();
   const endOfToday = new Date(now);
   endOfToday.setHours(23, 59, 59, 999);
 
   let inboxCount = 0;
   let todayCount = 0;
   let upcomingCount = 0;
+  let missedCount = 0;
   let completedCount = 0;
 
   todos.forEach(t => {
@@ -92,7 +94,9 @@ function updateBadges() {
           inboxCount++; // Inbox contains absolutely all incomplete tasks
           
           if (t.due_date) {
-            if (t.due_date <= endOfToday.getTime()) {
+            if (t.due_date < startOfToday) {
+                missedCount++;
+            } else if (t.due_date >= startOfToday && t.due_date <= endOfToday.getTime()) {
                 todayCount++;
             } else {
                 upcomingCount++;
@@ -104,6 +108,7 @@ function updateBadges() {
   document.getElementById("badge-inbox").innerText = inboxCount;
   document.getElementById("badge-today").innerText = todayCount;
   document.getElementById("badge-upcoming").innerText = upcomingCount;
+  document.getElementById("badge-missed").innerText = missedCount;
   document.getElementById("badge-completed").innerText = completedCount;
 }
 
@@ -112,6 +117,7 @@ function renderTodos() {
 
   const now = new Date();
   now.setHours(0, 0, 0, 0);
+  const startOfToday = now.getTime();
   const endOfToday = new Date(now);
   endOfToday.setHours(23, 59, 59, 999);
 
@@ -120,7 +126,8 @@ function renderTodos() {
       if (todo.completed) return false;
 
       if (currentFilter === "inbox") return true;
-      if (currentFilter === "today") return todo.due_date && todo.due_date <= endOfToday.getTime();
+      if (currentFilter === "missed") return todo.due_date && todo.due_date < startOfToday;
+      if (currentFilter === "today") return todo.due_date && todo.due_date >= startOfToday && todo.due_date <= endOfToday.getTime();
       if (currentFilter === "upcoming") return todo.due_date && todo.due_date > endOfToday.getTime();
       return true;
   });
@@ -648,6 +655,7 @@ function setFilter(filterName, title) {
 document.getElementById("nav-inbox")?.addEventListener("click", () => setFilter("inbox", "Inbox"));
 document.getElementById("nav-today")?.addEventListener("click", () => setFilter("today", "Today"));
 document.getElementById("nav-upcoming")?.addEventListener("click", () => setFilter("upcoming", "Upcoming"));
+document.getElementById("nav-missed")?.addEventListener("click", () => setFilter("missed", "Missed"));
 document.getElementById("nav-completed")?.addEventListener("click", () => setFilter("completed", "Completed"));
 
 document.getElementById("add-todo-btn")?.addEventListener("click", openTaskModal);
