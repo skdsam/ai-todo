@@ -512,7 +512,12 @@ You must ALWAYS respond with ONLY valid JSON matching this exact structure:
 CRITICAL RULES:
 1. "description" MUST ALWAYS BE EMPTY ("") unless the user explicitly gave you a long paragraph to use as a description. Do NOT invent descriptions!
 2. "due_date" MUST BE exactly "YYYY-MM-DD" based on counting days from Today (${localISO}). If no date is mentioned, use "".
-3. Return ONLY valid JSON. No markdown formatting.`;
+3. Return ONLY valid JSON. No markdown formatting.
+
+EXAMPLE:
+User: Add a task to collect dogs two weeks from now
+Assistant: {"message": "I have added a task to collect dogs in two weeks.", "suggested_actions": [{"type": "CreateTask", "data": {"title": "Collect dogs", "description": "", "priority": "High", "tags": ["dogs"], "due_date": "2026-03-20"}}]}
+`;
 
   try {
     const thinkingMsg = appendMessage("ai", "Assistant is thinking");
@@ -521,7 +526,7 @@ CRITICAL RULES:
     const rawResponse = await invoke("send_chat_message", {
       messages: [
         { role: "system", content: systemPrompt },
-        { role: "user", content: text }
+        { role: "user", content: text + "\n\nRespond ONLY with valid JSON." }
       ],
       eventName: "ai-response-token"
     });
@@ -611,7 +616,8 @@ CRITICAL RULES:
         }
         await loadTodos();
       }
-    } catch {
+    } catch (parseError) {
+      console.error("Failed to parse AI JSON response. Raw string from AI:", rawResponse, parseError);
       appendMessage("ai", rawResponse);
     }
   } catch (e) {
