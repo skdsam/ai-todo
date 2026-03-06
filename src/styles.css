@@ -51,7 +51,6 @@ button .material-symbols-outlined {
   flex-direction: column;
   height: 100vh;
   min-width: 200px;
-  max-width: 400px;
   overflow: hidden; /* NEVER scroll the whole sidebar */
 }
 
