@@ -6,7 +6,7 @@ let cachedModels = [];
 let downloadingModelId = null;
 let currentModelId = localStorage.getItem("ai_todo_model_id");
 let currentEditId = null;
-let currentFilter = "today";
+let currentFilter = "inbox";
 let sortByPriority = false;
 let sortByAlpha = false;
 
