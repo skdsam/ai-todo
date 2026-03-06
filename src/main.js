@@ -186,7 +186,7 @@ function renderTodos() {
                 </span>
               ` : ''}
               
-              <span style="font-size: 0.75rem; font-weight: 700; color: ${todo.priority === 'High' ? '#e11d48' : '#64748b'};">
+              <span style="font-size: 0.75rem; font-weight: 700; color: ${todo.priority === 'High' ? '#ef4444' : todo.priority === 'Medium' ? '#eab308' : '#22c55e'};">
                  ${todo.priority.toUpperCase()}
               </span>
 
@@ -289,8 +289,21 @@ window.viewTodo = (id) => {
         const dueStr = new Date(todo.due_date).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
         metaHtml += `<span style="font-size: 0.75rem; color: #64748b; display: flex; align-items: center; gap: 4px; background: var(--bg-light); border: 1px solid var(--border); padding: 4px 8px; border-radius: 6px;"><span class="material-symbols-outlined" style="font-size: 14px;">calendar_today</span> ${dueStr}</span>`;
     }
+    let prioColor = '#22c55e'; // Low default
+    let prioBg = '#dcfce7'; 
+    let prioBorder = '#bbf7d0'; 
+
+    if (todo.priority === 'High') {
+        prioColor = '#ef4444';
+        prioBg = '#fee2e2';
+        prioBorder = '#fecaca';
+    } else if (todo.priority === 'Medium') {
+        prioColor = '#eab308';
+        prioBg = '#fef9c3';
+        prioBorder = '#fef08a';
+    }
     
-    metaHtml += `<span style="font-size: 0.75rem; font-weight: 700; color: ${todo.priority === 'High' ? '#e11d48' : '#64748b'}; background: ${todo.priority === 'High' ? '#ffe4e6' : 'var(--bg-light)'}; border: 1px solid ${todo.priority === 'High' ? '#fecdd3' : 'var(--border)'}; padding: 4px 8px; border-radius: 6px;">${todo.priority.toUpperCase()}</span>`;
+    metaHtml += `<span style="font-size: 0.75rem; font-weight: 700; color: ${prioColor}; background: ${prioBg}; border: 1px solid ${prioBorder}; padding: 4px 8px; border-radius: 6px;">${todo.priority.toUpperCase()}</span>`;
     
     todo.tags.forEach(tag => {
         metaHtml += `<span style="font-size: 0.75rem; color: #64748b; display: flex; align-items: center; gap: 4px; background: var(--bg-light); border: 1px solid var(--border); padding: 4px 8px; border-radius: 6px;"><span class="material-symbols-outlined" style="font-size: 14px;">sell</span> ${tag}</span>`;
