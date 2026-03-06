@@ -80,28 +80,34 @@ function renderTodos() {
       <div class="task-item ${isMagic ? 'magic-task' : ''} ${todo.completed ? 'opacity-50 grayscale' : ''}">
         <div class="custom-checkbox ${todo.completed ? 'checked' : ''}" onclick="toggleTodo('${todo.id}')"></div>
         
-        <div style="flex: 1; display: flex; flex-direction: column; cursor: pointer; padding: 4px 0;" onclick="viewTodo('${todo.id}')">
-          <div style="display: flex; align-items: center; gap: 0.5rem;">
-            <span style="font-size: 1rem; font-weight: 500; ${todo.completed ? 'text-decoration: line-through' : ''}">${todo.title}</span>
-            ${isMagic ? `<span class="magic-badge"><span class="material-symbols-outlined" style="font-size: 12px; font-variation-settings: 'FILL' 1;">magic_button</span> Magic</span>` : ''}
+        <div style="flex: 1; display: flex; align-items: center; gap: 2rem; cursor: pointer; padding: 4px 0;" onclick="viewTodo('${todo.id}')">
+          <div style="min-width: 300px; max-width: 400px; display: flex; flex-direction: column;">
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+              <span style="font-size: 1rem; font-weight: 500; ${todo.completed ? 'text-decoration: line-through' : ''}">${todo.title}</span>
+              ${isMagic ? `<span class="magic-badge"><span class="material-symbols-outlined" style="font-size: 12px; font-variation-settings: 'FILL' 1;">magic_button</span> Magic</span>` : ''}
+            </div>
+            
+            <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 1rem; margin-top: 4px;">
+              ${dueStr ? `
+                <span style="font-size: 0.75rem; color: #64748b; display: flex; align-items: center; gap: 4px;">
+                  <span class="material-symbols-outlined" style="font-size: 14px;">schedule</span> Due ${dueStr}
+                </span>
+              ` : ''}
+              
+              <span style="font-size: 0.75rem; font-weight: 700; color: ${todo.priority === 'High' ? '#e11d48' : '#64748b'};">
+                 ${todo.priority.toUpperCase()}
+              </span>
+
+              ${todo.tags.filter(t => !['magic','ai'].includes(t.toLowerCase())).map(tag => `
+                <span style="font-size: 0.75rem; color: #64748b; display: flex; align-items: center; gap: 4px;">
+                  <span class="material-symbols-outlined" style="font-size: 14px;">sell</span> ${tag}
+                </span>
+              `).join('')}
+            </div>
           </div>
           
-          <div style="display: flex; align-items: center; gap: 1rem; margin-top: 4px;">
-            ${dueStr ? `
-              <span style="font-size: 0.75rem; color: #64748b; display: flex; align-items: center; gap: 4px;">
-                <span class="material-symbols-outlined" style="font-size: 14px;">schedule</span> Due ${dueStr}
-              </span>
-            ` : ''}
-            
-            <span style="font-size: 0.75rem; font-weight: 700; color: ${todo.priority === 'High' ? '#e11d48' : '#64748b'};">
-               ${todo.priority.toUpperCase()}
-            </span>
-
-            ${todo.tags.filter(t => !['magic','ai'].includes(t.toLowerCase())).map(tag => `
-              <span style="font-size: 0.75rem; color: #64748b; display: flex; align-items: center; gap: 4px;">
-                <span class="material-symbols-outlined" style="font-size: 14px;">sell</span> ${tag}
-              </span>
-            `).join('')}
+          <div style="flex: 1; font-size: 0.85rem; color: var(--text-secondary); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; mix-blend-mode: multiply; opacity: 0.8;">
+            ${todo.description || ''}
           </div>
         </div>
 
