@@ -87,10 +87,11 @@ function updateBadges() {
       if (t.completed) {
           completedCount++;
       } else {
-          inboxCount++; // All incomplete goes to inbox
-          if (t.due_date && t.due_date <= endOfToday.getTime()) {
+          if (!t.due_date) {
+              inboxCount++; 
+          } else if (t.due_date <= endOfToday.getTime()) {
               todayCount++;
-          } else if (t.due_date && t.due_date > endOfToday.getTime()) {
+          } else {
               upcomingCount++;
           }
       }
@@ -114,7 +115,7 @@ function renderTodos() {
       if (currentFilter === "completed") return todo.completed;
       if (todo.completed) return false;
 
-      if (currentFilter === "inbox") return true;
+      if (currentFilter === "inbox") return !todo.due_date;
       if (currentFilter === "today") return todo.due_date && todo.due_date <= endOfToday.getTime();
       if (currentFilter === "upcoming") return todo.due_date && todo.due_date > endOfToday.getTime();
       return true;
@@ -126,7 +127,21 @@ function renderTodos() {
   }
 
   todoContainer.innerHTML = filteredTodos.map((todo, index) => {
-    const dueStr = todo.due_date ? new Date(todo.due_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null;
+    let dueStr = null;
+    if (todo.due_date) {
+        const dObj = new Date(todo.due_date);
+        const isOverdue = dObj.getTime() < now.getTime();
+        const isToday = dObj.getTime() >= now.getTime() && dObj.getTime() <= endOfToday.getTime();
+        
+        if (isToday) {
+            dueStr = "Today";
+        } else if (isOverdue) {
+            dueStr = "Overdue";
+        } else {
+            dueStr = dObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+        }
+    }
+    
     const isMagic = todo.tags.some(t => t.toLowerCase() === 'magic' || t.toLowerCase() === 'ai');
 
     return `
@@ -247,8 +262,8 @@ window.viewTodo = (id) => {
     
     let metaHtml = "";
     if (todo.due_date) {
-        const dueStr = new Date(todo.due_date).toLocaleTimeString([], { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-        metaHtml += `<span style="font-size: 0.75rem; color: #64748b; display: flex; align-items: center; gap: 4px; background: var(--bg-light); border: 1px solid var(--border); padding: 4px 8px; border-radius: 6px;"><span class="material-symbols-outlined" style="font-size: 14px;">schedule</span> ${dueStr}</span>`;
+        const dueStr = new Date(todo.due_date).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+        metaHtml += `<span style="font-size: 0.75rem; color: #64748b; display: flex; align-items: center; gap: 4px; background: var(--bg-light); border: 1px solid var(--border); padding: 4px 8px; border-radius: 6px;"><span class="material-symbols-outlined" style="font-size: 14px;">calendar_today</span> ${dueStr}</span>`;
     }
     
     metaHtml += `<span style="font-size: 0.75rem; font-weight: 700; color: ${todo.priority === 'High' ? '#e11d48' : '#64748b'}; background: ${todo.priority === 'High' ? '#ffe4e6' : 'var(--bg-light)'}; border: 1px solid ${todo.priority === 'High' ? '#fecdd3' : 'var(--border)'}; padding: 4px 8px; border-radius: 6px;">${todo.priority.toUpperCase()}</span>`;
@@ -369,8 +384,13 @@ saveTaskBtn.onclick = async () => {
         return;
     }
 
-    const dueDateValue = taskDueInput.value;
-    const due_date = dueDateValue ? new Date(dueDateValue).getTime() : null;
+    let due_date = null;
+    if (taskDueInput.value) {
+        const [y, m, d] = taskDueInput.value.split('-');
+        const dateObj = new Date(y, m - 1, d);
+        // Store as midnight properly local time
+        due_date = dateObj.getTime();
+    }
 
     if (currentEditId) {
         const existing = todos.find(t => t.id === currentEditId);
