@@ -87,12 +87,14 @@ function updateBadges() {
       if (t.completed) {
           completedCount++;
       } else {
-          if (!t.due_date) {
-              inboxCount++; 
-          } else if (t.due_date <= endOfToday.getTime()) {
-              todayCount++;
-          } else {
-              upcomingCount++;
+          inboxCount++; // Inbox contains absolutely all incomplete tasks
+          
+          if (t.due_date) {
+            if (t.due_date <= endOfToday.getTime()) {
+                todayCount++;
+            } else {
+                upcomingCount++;
+            }
           }
       }
   });
@@ -115,7 +117,7 @@ function renderTodos() {
       if (currentFilter === "completed") return todo.completed;
       if (todo.completed) return false;
 
-      if (currentFilter === "inbox") return !todo.due_date;
+      if (currentFilter === "inbox") return true;
       if (currentFilter === "today") return todo.due_date && todo.due_date <= endOfToday.getTime();
       if (currentFilter === "upcoming") return todo.due_date && todo.due_date > endOfToday.getTime();
       return true;
