@@ -478,7 +478,8 @@ async function sendToAI() {
   aiInput.style.height = "auto"; // Reset height
 
   const now = new Date();
-  const systemPrompt = `You are a productivity expert. Current local time: ${now.toLocaleString()}.
+  const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric' };
+  const systemPrompt = `You are a productivity expert. Current local time: ${now.toLocaleString(undefined, options)}.
 Current tasks:
 ${JSON.stringify(todos, null, 2)}
 
