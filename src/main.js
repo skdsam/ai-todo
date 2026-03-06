@@ -7,10 +7,11 @@ let downloadingModelId = null;
 let currentModelId = localStorage.getItem("ai_todo_model_id");
 
 const chatBox = document.getElementById("chat-box");
-const aiInput = document.getElementById("ai-input");
-const sendBtn = document.getElementById("send-ai-btn");
+const aiInput = document.getElementById("sidebar-ai-input");
+const sendBtn = document.getElementById("sidebar-send-btn");
 const todoContainer = document.getElementById("todo-container");
-const modelStatus = document.getElementById("model-status");
+const aiStatusDot = document.getElementById("ai-status-dot");
+const aiStatusText = document.getElementById("ai-status-text");
 
 const forgeModal = document.getElementById("forge-modal");
 const openForgeBtn = document.getElementById("open-forge-btn");
@@ -62,23 +63,42 @@ async function loadTodos() {
 
 function renderTodos() {
   todoContainer.innerHTML = todos.map(todo => {
-    const createdStr = new Date(todo.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-    const dueStr = todo.due_date ? new Date(todo.due_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : null;
+    const dueStr = todo.due_date ? new Date(todo.due_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null;
+    const isMagic = todo.tags.some(t => t.toLowerCase() === 'magic' || t.toLowerCase() === 'ai');
 
     return `
-      <div class="todo-item" style="${todo.completed ? 'opacity: 0.6' : ''}">
-        <input type="checkbox" ${todo.completed ? 'checked' : ''} onchange="toggleTodo('${todo.id}')" />
-        <div class="todo-info">
-          <div class="todo-title" style="${todo.completed ? 'text-decoration: line-through' : ''}">${todo.title}</div>
-          <div class="todo-desc">${todo.description}</div>
-          <div class="todo-meta">
-            <span class="badge badge-priority-${todo.priority.toLowerCase()}">${todo.priority}</span>
-            <span class="badge" style="background: rgba(0,0,0,0.1)">📅 Created ${createdStr}</span>
-            ${dueStr ? `<span class="badge" style="background: var(--accent); color: #fff">🎯 Target: ${dueStr}</span>` : ''}
-            ${todo.tags.map(tag => `<span class="badge" style="background: rgba(0,0,0,0.1)">#${tag}</span>`).join('')}
+      <div class="task-item ${isMagic ? 'magic-task' : ''} ${todo.completed ? 'opacity-50 grayscale' : ''}">
+        <div class="custom-checkbox ${todo.completed ? 'checked' : ''}" onclick="toggleTodo('${todo.id}')"></div>
+        
+        <div style="flex: 1; display: flex; flex-direction: column;">
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <span style="font-size: 1rem; font-weight: 500; ${todo.completed ? 'text-decoration: line-through' : ''}">${todo.title}</span>
+            ${isMagic ? `<span class="magic-badge"><span class="material-symbols-outlined" style="font-size: 12px; font-variation-settings: 'FILL' 1;">magic_button</span> Magic</span>` : ''}
+          </div>
+          
+          <div style="display: flex; align-items: center; gap: 1rem; margin-top: 4px;">
+            ${dueStr ? `
+              <span style="font-size: 0.75rem; color: #64748b; display: flex; align-items: center; gap: 4px;">
+                <span class="material-symbols-outlined" style="font-size: 14px;">schedule</span> Due ${dueStr}
+              </span>
+            ` : ''}
+            
+            <span style="font-size: 0.75rem; font-weight: 700; color: ${todo.priority === 'High' ? '#e11d48' : '#64748b'};">
+               ${todo.priority.toUpperCase()}
+            </span>
+
+            ${todo.tags.filter(t => !['magic','ai'].includes(t.toLowerCase())).map(tag => `
+              <span style="font-size: 0.75rem; color: #64748b; display: flex; align-items: center; gap: 4px;">
+                <span class="material-symbols-outlined" style="font-size: 14px;">sell</span> ${tag}
+              </span>
+            `).join('')}
           </div>
         </div>
-        <button class="btn-remove" onclick="deleteTodo('${todo.id}')">Remove</button>
+
+        <div style="display: flex; gap: 0.25rem;">
+           <button class="btn-ghost" onclick="editTodo('${todo.id}')" title="Edit"><span class="material-symbols-outlined">edit</span></button>
+           <button class="btn-ghost" onclick="deleteTodo('${todo.id}')" title="Delete"><span class="material-symbols-outlined" style="color: #ef4444;">delete</span></button>
+        </div>
       </div>
     `;
   }).join('');
@@ -343,12 +363,16 @@ async function checkModelStatus() {
   const active = cachedModels.find(m => m.info.id === currentModelId && m.installed);
   
   if (active) {
-    modelStatus.innerText = `🟢 AI Online: ${active.info.name}`;
+    aiStatusDot.style.background = "#10b981"; // green
+    aiStatusText.innerText = "READY";
+    appendMessage("ai", `Connected to ${active.info.name}`);
     await invoke("start_llama_server", { customModelPath: active.path }).catch(() => {
-        modelStatus.innerText = `⚠️ ${active.info.name} (Error)`;
+        aiStatusDot.style.background = "#f59e0b"; // yellow error 
+        aiStatusText.innerText = "ERROR";
     });
   } else {
-    modelStatus.innerText = "🔴 AI Offline. Manage models to start.";
+    aiStatusDot.style.background = "#ef4444"; // red
+    aiStatusText.innerText = "OFFLINE";
   }
   renderForge();
 }
@@ -358,20 +382,30 @@ function renderForge() {
     const isDownloading = downloadingModelId === ms.info.id;
     const isActive = currentModelId === ms.info.id && ms.installed;
     return `
-      <div class="todo-item" style="flex-direction: column; align-items: flex-start;">
-        <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
-          <div class="todo-title">${ms.info.name} (${ms.info.params})</div>
-          <div class="badge">${ms.info.size_gb.toFixed(1)} GB</div>
+      <div class="model-card">
+        <div class="model-header">
+          <div class="model-title">${ms.info.name} <span style="font-weight: 500; color: var(--text-muted); font-size: 0.8em; margin-left: 4px;">${ms.info.params}</span></div>
+          <div class="model-size">${ms.info.size_gb.toFixed(1)} GB</div>
         </div>
-        <div class="todo-desc">${ms.info.description}</div>
+        <div class="model-desc">${ms.info.description}</div>
         ${isDownloading ? `
-          <div class="progress-wrap"><div id="progress-bar-${ms.info.id}" class="progress-bar" style="width: 0%"></div></div>
+          <div style="height: 6px; background: var(--border); border-radius: 4px; overflow: hidden; margin-top: 0.5rem;">
+            <div id="progress-bar-${ms.info.id}" style="height: 100%; background: var(--primary); width: 0%; transition: width 0.3s ease;"></div>
+          </div>
         ` : `
-          <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+          <div class="model-actions">
             ${ms.installed ? `
-              <button class="btnSmall select-model-btn" data-id="${ms.info.id}" ${isActive ? 'disabled style="opacity: 0.5"' : ''}>${isActive ? 'Selected' : 'Select'}</button>
-              <button class="btnSmall delete-model-btn" data-id="${ms.info.id}" style="color: var(--danger)">Delete</button>
-            ` : `<button class="btnSmall download-model-btn" data-id="${ms.info.id}">Download</button>`}
+              <button class="${isActive ? 'btn-success' : 'btn-outline'} select-model-btn" data-id="${ms.info.id}" ${isActive ? 'disabled style="opacity: 0.8; cursor: default;"' : ''}>
+                ${isActive ? '<span class="material-symbols-outlined" style="font-size: 16px;">check_circle</span> Selected' : 'Select'}
+              </button>
+              <button class="btn-outline delete-model-btn" data-id="${ms.info.id}" style="color: #ef4444; border-color: #fca5a5;">
+                 <span class="material-symbols-outlined" style="font-size: 16px;">delete</span> Remove
+              </button>
+            ` : `
+              <button class="btn-primary download-model-btn" data-id="${ms.info.id}">
+                <span class="material-symbols-outlined" style="font-size: 16px;">download</span> Download
+              </button>
+            `}
           </div>
         `}
       </div>
@@ -414,11 +448,36 @@ async function deleteModel(id) {
 
 // --- Event Wireup ---
 
-document.getElementById("add-todo-btn").onclick = openTaskModal;
-document.getElementById("close-task-btn").onclick = closeTaskModal;
-openForgeBtn.onclick = () => { forgeModal.style.display = "flex"; renderForge(); };
-closeForgeBtn.onclick = () => { forgeModal.style.display = "none"; };
-sendBtn.onclick = sendToAI;
+document.getElementById("add-todo-btn")?.addEventListener("click", openTaskModal);
+document.getElementById("close-task-btn")?.addEventListener("click", closeTaskModal);
+
+if(openForgeBtn) {
+    openForgeBtn.addEventListener("click", () => {
+        forgeModal.style.display = "flex";
+        renderForge();
+        console.log("Opened Forge");
+    });
+}
+if(closeForgeBtn) {
+    closeForgeBtn.addEventListener("click", () => {
+        forgeModal.style.display = "none";
+    });
+}
+
+if(openThemeBtn) {
+    openThemeBtn.addEventListener("click", () => {
+        themeModal.style.display = "flex";
+    });
+}
+if(closeThemeBtn) {
+    closeThemeBtn.addEventListener("click", () => {
+        themeModal.style.display = "none";
+    });
+}
+
+if(sendBtn) {
+    sendBtn.addEventListener("click", sendToAI);
+}
 
 aiInput.addEventListener("input", function() {
   this.style.height = "auto";
