@@ -5,6 +5,7 @@ let todos = [];
 let cachedModels = [];
 let downloadingModelId = null;
 let currentModelId = localStorage.getItem("ai_todo_model_id");
+let currentEditId = null;
 
 const chatBox = document.getElementById("chat-box");
 const aiInput = document.getElementById("sidebar-ai-input");
@@ -126,6 +127,9 @@ window.deleteTodo = async (id) => {
 // --- Modal Logic ---
 
 const openTaskModal = () => {
+    currentEditId = null;
+    document.getElementById("task-modal-title").innerText = "New Task";
+    saveTaskBtn.innerText = "Create Task";
     taskModal.style.display = "flex";
     taskTitleInput.focus();
 };
@@ -137,6 +141,33 @@ const closeTaskModal = () => {
     taskPriorityInput.value = "Medium";
     taskDueInput.value = "";
     taskTagsInput.value = "";
+    currentEditId = null;
+};
+
+window.editTodo = (id) => {
+    const todo = todos.find(t => t.id === id);
+    if (!todo) return;
+    
+    currentEditId = id;
+    document.getElementById("task-modal-title").innerText = "Edit Task";
+    saveTaskBtn.innerText = "Save Changes";
+    
+    taskTitleInput.value = todo.title;
+    taskDescInput.value = todo.description || "";
+    taskPriorityInput.value = todo.priority;
+    if (todo.due_date) {
+        const dateObj = new Date(todo.due_date);
+        const year = dateObj.getFullYear();
+        const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const day = String(dateObj.getDate()).padStart(2, '0');
+        taskDueInput.value = `${year}-${month}-${day}`;
+    } else {
+        taskDueInput.value = "";
+    }
+    taskTagsInput.value = todo.tags.join(", ");
+    
+    taskModal.style.display = "flex";
+    taskTitleInput.focus();
 };
 
 // --- Theme Logic ---
@@ -250,18 +281,31 @@ saveTaskBtn.onclick = async () => {
     const dueDateValue = taskDueInput.value;
     const due_date = dueDateValue ? new Date(dueDateValue).getTime() : null;
 
-    const newTodo = {
-        id: crypto.randomUUID(),
-        title,
-        description: taskDescInput.value.trim(),
-        completed: false,
-        priority: taskPriorityInput.value,
-        tags: taskTagsInput.value.split(',').map(t => t.trim()).filter(t => t !== ""),
-        created_at: Date.now(),
-        due_date
-    };
+    if (currentEditId) {
+        const existing = todos.find(t => t.id === currentEditId);
+        if (existing) {
+            existing.title = title;
+            existing.description = taskDescInput.value.trim();
+            existing.priority = taskPriorityInput.value;
+            existing.tags = taskTagsInput.value.split(',').map(t => t.trim()).filter(t => t !== "");
+            existing.due_date = due_date;
+            await invoke("save_todo", { todo: existing });
+        }
+    } else {
+        const newTodo = {
+            id: crypto.randomUUID(),
+            title,
+            description: taskDescInput.value.trim(),
+            completed: false,
+            priority: taskPriorityInput.value,
+            tags: taskTagsInput.value.split(',').map(t => t.trim()).filter(t => t !== ""),
+            created_at: Date.now(),
+            due_date
+        };
+        await invoke("save_todo", { todo: newTodo });
+    }
 
-    await invoke("save_todo", { todo: newTodo });
+    currentEditId = null;
     await loadTodos();
     closeTaskModal();
 };
