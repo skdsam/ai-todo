@@ -24,21 +24,25 @@
 
       <nav class="sidebar-nav">
         <div class="section-label">Workspace</div>
-        <div class="nav-item">
+        <div class="nav-item" id="nav-inbox">
           <span class="material-symbols-outlined">inbox</span>
           <span>Inbox</span>
-          <span class="nav-badge">12</span>
+          <span class="nav-badge" id="badge-inbox">0</span>
         </div>
-        <div class="nav-item active">
+        <div class="nav-item active" id="nav-today">
           <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">today</span>
           <span>Today</span>
+          <span class="nav-badge" id="badge-today">0</span>
         </div>
-        <div class="nav-item">
+        <div class="nav-item" id="nav-upcoming">
           <span class="material-symbols-outlined">calendar_month</span>
           <span>Upcoming</span>
+          <span class="nav-badge" id="badge-upcoming">0</span>
         </div>
-        <div class="nav-item">
+        <div class="nav-item" id="nav-completed">
           <span class="material-symbols-outlined">folder</span>
+          <span>Completed</span>
+          <span class="nav-badge" id="badge-completed">0</span>
         </div>
         <!-- Intelligence Section -->
         <div class="sidebar-section" style="display: flex; flex-direction: column; flex: 1;">
@@ -101,7 +105,8 @@
       <header class="content-header">
         <div style="width: 100%;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-            <h2 style="font-size: 1.8rem; font-weight: 800; letter-spacing: -0.02em; margin: 0;">Today</h2>
+            <h2 id="main-header-title" style="font-size: 1.8rem; font-weight: 800; letter-spacing: -0.02em; margin: 0;">
+              Today</h2>
             <div style="display: flex; gap: 0.5rem;">
               <button class="btn-ghost"><span class="material-symbols-outlined">filter_list</span></button>
               <button class="btn-ghost"><span class="material-symbols-outlined">more_horiz</span></button>

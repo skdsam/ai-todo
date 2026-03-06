@@ -6,6 +6,7 @@ let cachedModels = [];
 let downloadingModelId = null;
 let currentModelId = localStorage.getItem("ai_todo_model_id");
 let currentEditId = null;
+let currentFilter = "today";
 
 const chatBox = document.getElementById("chat-box");
 const aiInput = document.getElementById("sidebar-ai-input");
@@ -71,8 +72,60 @@ async function loadTodos() {
   renderTodos();
 }
 
+function updateBadges() {
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  const endOfToday = new Date(now);
+  endOfToday.setHours(23, 59, 59, 999);
+
+  let inboxCount = 0;
+  let todayCount = 0;
+  let upcomingCount = 0;
+  let completedCount = 0;
+
+  todos.forEach(t => {
+      if (t.completed) {
+          completedCount++;
+      } else {
+          inboxCount++; // All incomplete goes to inbox
+          if (t.due_date && t.due_date <= endOfToday.getTime()) {
+              todayCount++;
+          } else if (t.due_date && t.due_date > endOfToday.getTime()) {
+              upcomingCount++;
+          }
+      }
+  });
+
+  document.getElementById("badge-inbox").innerText = inboxCount;
+  document.getElementById("badge-today").innerText = todayCount;
+  document.getElementById("badge-upcoming").innerText = upcomingCount;
+  document.getElementById("badge-completed").innerText = completedCount;
+}
+
 function renderTodos() {
-  todoContainer.innerHTML = todos.map((todo, index) => {
+  updateBadges();
+
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  const endOfToday = new Date(now);
+  endOfToday.setHours(23, 59, 59, 999);
+
+  const filteredTodos = todos.filter(todo => {
+      if (currentFilter === "completed") return todo.completed;
+      if (todo.completed) return false;
+
+      if (currentFilter === "inbox") return true;
+      if (currentFilter === "today") return todo.due_date && todo.due_date <= endOfToday.getTime();
+      if (currentFilter === "upcoming") return todo.due_date && todo.due_date > endOfToday.getTime();
+      return true;
+  });
+
+  if (filteredTodos.length === 0) {
+      todoContainer.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 3rem 1rem;">No tasks found for this view.</div>`;
+      return;
+  }
+
+  todoContainer.innerHTML = filteredTodos.map((todo, index) => {
     const dueStr = todo.due_date ? new Date(todo.due_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null;
     const isMagic = todo.tags.some(t => t.toLowerCase() === 'magic' || t.toLowerCase() === 'ai');
 
@@ -116,7 +169,7 @@ function renderTodos() {
            <button class="btn-ghost" onclick="deleteTodo('${todo.id}')" title="Delete"><span class="material-symbols-outlined" style="color: #ef4444;">delete</span></button>
         </div>
       </div>
-      ${index < todos.length - 1 ? '<div style="height: 1px; background: var(--border); margin: 0.25rem 1rem; opacity: 0.5;"></div>' : ''}
+      ${index < filteredTodos.length - 1 ? '<div style="height: 1px; background: var(--border); margin: 0.25rem 1rem; opacity: 0.5;"></div>' : ''}
     `;
   }).join('');
 }
@@ -533,6 +586,32 @@ async function deleteModel(id) {
 }
 
 // --- Event Wireup ---
+
+function setFilter(filterName, title) {
+    currentFilter = filterName;
+    
+    // Update active class on nav items
+    document.querySelectorAll('.sidebar-nav .nav-item').forEach(item => {
+        item.classList.remove('active');
+        item.querySelector('.material-symbols-outlined').style.fontVariationSettings = "'FILL' 0";
+    });
+    
+    const activeItem = document.getElementById(`nav-${filterName}`);
+    if (activeItem) {
+        activeItem.classList.add('active');
+        activeItem.querySelector('.material-symbols-outlined').style.fontVariationSettings = "'FILL' 1";
+    }
+    
+    // Update Main Title
+    document.getElementById("main-header-title").innerText = title;
+    
+    renderTodos();
+}
+
+document.getElementById("nav-inbox")?.addEventListener("click", () => setFilter("inbox", "Inbox"));
+document.getElementById("nav-today")?.addEventListener("click", () => setFilter("today", "Today"));
+document.getElementById("nav-upcoming")?.addEventListener("click", () => setFilter("upcoming", "Upcoming"));
+document.getElementById("nav-completed")?.addEventListener("click", () => setFilter("completed", "Completed"));
 
 document.getElementById("add-todo-btn")?.addEventListener("click", openTaskModal);
 document.getElementById("close-task-btn")?.addEventListener("click", closeTaskModal);
