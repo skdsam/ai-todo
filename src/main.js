@@ -510,13 +510,14 @@ You must ALWAYS respond with ONLY valid JSON matching this exact structure:
 }
 
 CRITICAL RULES:
-1. "description" MUST ALWAYS BE EMPTY ("") unless the user explicitly gave you a long paragraph to use as a description. Do NOT invent descriptions!
-2. "due_date" MUST BE exactly "YYYY-MM-DD" based on counting days from Today (${localISO}). If no date is mentioned, use "".
-3. Return ONLY valid JSON. No markdown formatting.
+1. "title" MUST BE derived exactly from the user's request. Do NOT embellish, reword, or add extra context.
+2. "description" MUST ALWAYS BE EMPTY ("") unless the user explicitly gave you a long paragraph to use as a description. Do NOT invent descriptions!
+3. "due_date" MUST BE exactly "YYYY-MM-DD" based on counting days from Today (${localISO}). If no date is mentioned, use "".
+4. Return ONLY valid JSON. No markdown formatting.
 
 EXAMPLE:
-User: Add a task to collect dogs two weeks from now
-Assistant: {"message": "I have added a task to collect dogs in two weeks.", "suggested_actions": [{"type": "CreateTask", "data": {"title": "Collect dogs", "description": "", "priority": "High", "tags": ["dogs"], "due_date": "2026-03-20"}}]}
+User: Add a task to buy groceries 3 days from now priority high
+Assistant: {"message": "I have added a task to buy groceries in 3 days.", "suggested_actions": [{"type": "CreateTask", "data": {"title": "Buy groceries", "description": "", "priority": "High", "tags": ["groceries"], "due_date": "2026-03-09"}}]}
 `;
 
   try {
