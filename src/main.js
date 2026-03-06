@@ -488,7 +488,7 @@ JSON SCHEMA:
 {
   "message": "Conversational response",
   "suggested_actions": [
-    { "type": "CreateTask", "data": { "title": "...", "description": "...", "priority": "High|Medium|Low", "tags": [], "due_date": "ISO8601 string or null" } },
+    { "type": "CreateTask", "data": { "title": "...", "description": "...", "priority": "High|Medium|Low", "tags": [], "due_date": "YYYY-MM-DD or null" } },
     { "type": "UpdateTask", "data": { "id": "...", "completed": true, "due_date": "..." } },
     { "type": "DeleteTask", "data": "id" }
   ]
@@ -517,15 +517,21 @@ Always reply in valid JSON if actions are needed. Otherwise, just reply with a "
         for (const action of data.suggested_actions) {
           if (action.type === "CreateTask") {
             let due_date = null;
-            if (action.data.due_date) {
-                // Best effort local midnight parse if AI gives just YYYY-MM-DD
-                const val = action.data.due_date;
-                if (val.length === 10) { 
-                    const [y, m, d] = val.split('-');
-                    due_date = new Date(y, m - 1, d).getTime();
+            if (action.data.due_date && typeof action.data.due_date === 'string' && action.data.due_date.trim() !== "null") {
+                const val = action.data.due_date.trim();
+                // Attempt to parse YYYY-MM-DD safely into local midnight
+                if (val.length >= 10) { 
+                    const [y, m, d] = val.substring(0, 10).split('-');
+                    if (y && m && d) {
+                        due_date = new Date(y, m - 1, d).getTime();
+                    } else {
+                        due_date = new Date(val).getTime(); // fallback
+                    }
                 } else {
                     due_date = new Date(val).getTime();
                 }
+                
+                if (isNaN(due_date)) due_date = null;
             }
 
             const newTodo = {
@@ -543,7 +549,23 @@ Always reply in valid JSON if actions are needed. Otherwise, just reply with a "
             const existing = todos.find(t => t.id === action.data.id);
             if (existing) {
               const updateData = { ...action.data };
-              if (updateData.due_date) updateData.due_date = new Date(updateData.due_date).getTime();
+              if (updateData.due_date && typeof updateData.due_date === 'string' && updateData.due_date.trim() !== "null") {
+                  const val = updateData.due_date.trim();
+                  let newTime = null;
+                  if (val.length >= 10) {
+                      const [y, m, d] = val.substring(0, 10).split('-');
+                      if (y && m && d) {
+                          newTime = new Date(y, m - 1, d).getTime();
+                      } else {
+                          newTime = new Date(val).getTime();
+                      }
+                  } else {
+                      newTime = new Date(val).getTime();
+                  }
+                  updateData.due_date = isNaN(newTime) ? null : newTime;
+              } else if (updateData.due_date === null || updateData.due_date === "null") {
+                  updateData.due_date = null;
+              }
               const updated = { ...existing, ...updateData };
               await invoke("save_todo", { todo: updated });
             }
