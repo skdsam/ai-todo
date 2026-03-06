@@ -1,26 +1,46 @@
-:root {
-  /* Stitch Design Tokens */
+:root, body {
+  /* Base Architecture Tokens (These scale automatically if the user creates a custom theme) */
   --primary: #1717cf;
-  --primary-soft: rgba(23, 23, 207, 0.1);
-  --bg-light: #f6f6f8;
+  --bg-app: #f6f6f8;
   --bg-sidebar: #f8fafc;
   --bg-card: #ffffff;
-  
   --text-main: #0f172a;
-  --text-secondary: #64748b;
-  --text-muted: #94a3b8;
+  --text-inverse: #ffffff;
   
-  --border: #e2e8f0;
-  --accent-blue: #1717cf;
+  /* Semantic Tokens */
+  --error: #ef4444;
+  --warning: #eab308;
+  --success: #22c55e;
+  
+  /* Auto-calculated derivates for robust theming */
+  --primary-hover: color-mix(in srgb, var(--primary) 80%, black);
+  --primary-soft: color-mix(in srgb, var(--primary) 10%, transparent);
+  --error-soft: color-mix(in srgb, var(--error) 10%, transparent);
+  --warning-soft: color-mix(in srgb, var(--warning) 10%, transparent);
+  --success-soft: color-mix(in srgb, var(--success) 10%, transparent);
+  --text-secondary: color-mix(in srgb, var(--text-main) 70%, transparent);
+  --text-muted: color-mix(in srgb, var(--text-main) 50%, transparent);
+  --border: color-mix(in srgb, var(--text-main) 12%, transparent);
+  --border-focus: color-mix(in srgb, var(--text-main) 25%, transparent);
   
   --sidebar-width: 280px;
   font-family: 'Inter', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
+body.theme-dark {
+  /* Dark Mode Tokens override */
+  --primary: #3b82f6;
+  --bg-app: #0f172a;
+  --bg-sidebar: #1e293b;
+  --bg-card: #0f172a;
+  --text-main: #f8fafc;
+  --text-inverse: #ffffff;
+}
+
 body {
   margin: 0;
-  background-color: var(--bg-light);
+  background-color: var(--bg-app);
   color: var(--text-main);
   height: 100vh;
   overflow: hidden;
@@ -45,7 +65,7 @@ button .material-symbols-outlined {
 
 /* Sidebar */
 .sidebar {
-  background: white;
+  background: var(--bg-sidebar);
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
@@ -64,7 +84,7 @@ button .material-symbols-outlined {
 
 .logo-box {
   background: var(--primary);
-  color: white;
+  color: var(--text-inverse);
   padding: 6px;
   border-radius: 8px;
   display: flex;
@@ -96,7 +116,11 @@ button .material-symbols-outlined {
   font-weight: 500;
   font-size: 0.9rem;
   cursor: pointer;
-  transition: colors 0.2s;
+  transition: all 0.2s;
+}
+
+.nav-item:hover {
+  background: var(--bg-card);
 }
 
 .nav-item:hover {
@@ -112,11 +136,28 @@ button .material-symbols-outlined {
 .nav-badge {
   margin-left: auto;
   font-size: 0.7rem;
-  background: #e2e8f0;
+  background: var(--border);
   padding: 2px 8px;
   border-radius: 10px;
   color: var(--text-secondary);
 }
+
+.nav-badge.badge-error {
+  background: var(--error-soft);
+  color: var(--error);
+}
+
+.text-error {
+  color: var(--error) !important;
+}
+
+.prio-high { color: var(--error); }
+.prio-medium { color: var(--warning); }
+.prio-low { color: var(--success); }
+
+.prio-badge-high { color: var(--error); background: var(--error-soft); border: 1px solid color-mix(in srgb, var(--error) 25%, transparent); }
+.prio-badge-medium { color: var(--warning); background: var(--warning-soft); border: 1px solid color-mix(in srgb, var(--warning) 30%, transparent); }
+.prio-badge-low { color: var(--success); background: var(--success-soft); border: 1px solid color-mix(in srgb, var(--success) 30%, transparent); }
 
 /* User Chat Message Styling */
 .message {
@@ -142,7 +183,7 @@ button .material-symbols-outlined {
 .intelligence-card {
   margin: 1rem 0;
   padding: 1rem;
-  background: white;
+  background: var(--bg-sidebar);
   border: 1px solid var(--border);
   border-radius: 16px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.05);
@@ -153,17 +194,16 @@ button .material-symbols-outlined {
   flex: 1;
   display: flex;
   flex-direction: column;
-  background: white;
+  background: var(--bg-sidebar);
   overflow-y: auto;
 }
 
 .content-header {
   position: sticky;
   top: 0;
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(12px);
+  background: var(--bg-app);
   padding: 1.5rem 2.5rem;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--border);
   z-index: 10;
 }
 
@@ -176,7 +216,8 @@ button .material-symbols-outlined {
 
 .ai-input-bar {
   width: 100%;
-  background: #f8fafc;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
   border-radius: 14px;
   padding: 0.75rem 1rem 0.75rem 3rem;
   border: none;
@@ -213,8 +254,8 @@ button .material-symbols-outlined {
 }
 
 .task-item:hover {
-  background: #f8fafc;
-  border-color: #f1f5f9;
+  background: var(--bg-card);
+  border-color: var(--border);
 }
 
 .task-item.magic-task {
@@ -224,7 +265,7 @@ button .material-symbols-outlined {
 
 .magic-badge {
   background: var(--primary);
-  color: white;
+  color: var(--text-inverse);
   font-size: 10px;
   font-weight: 800;
   padding: 2px 8px;
@@ -257,7 +298,7 @@ button .material-symbols-outlined {
 .custom-checkbox.checked::after {
   content: 'check';
   font-family: 'Material Symbols Outlined';
-  color: white;
+  color: var(--text-inverse);
   font-size: 16px;
 }
 
@@ -313,7 +354,7 @@ button .material-symbols-outlined {
 }
 
 .modal-content {
-  background: white;
+  background: var(--bg-sidebar);
   border-radius: 20px;
   padding: 2rem;
   width: 100%;
@@ -346,7 +387,7 @@ button .material-symbols-outlined {
 /* Buttons */
 .btn-primary {
   background: var(--primary);
-  color: white;
+  color: var(--text-inverse);
   border-radius: 8px;
   padding: 0.5rem 1rem;
   font-weight: 600;
@@ -366,7 +407,7 @@ button .material-symbols-outlined {
 
 .btn-success {
   background: #10b981; /* emerald-500 */
-  color: white;
+  color: var(--text-inverse);
   border-radius: 8px;
   padding: 0.5rem 1rem;
   font-weight: 600;
@@ -412,7 +453,7 @@ button .material-symbols-outlined {
 }
 
 .btn-ghost:hover {
-  background: #f1f5f9;
+  background: var(--border);
   color: var(--text-main);
 }
 

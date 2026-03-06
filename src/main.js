@@ -186,12 +186,12 @@ function renderTodos() {
                 </span>
               ` : ''}
               
-              <span style="font-size: 0.75rem; font-weight: 700; color: ${todo.priority === 'High' ? '#ef4444' : todo.priority === 'Medium' ? '#eab308' : '#22c55e'};">
+              <span style="font-size: 0.75rem; font-weight: 700;" class="prio-${todo.priority.toLowerCase()}">
                  ${todo.priority.toUpperCase()}
               </span>
 
               ${todo.tags.filter(t => !['magic','ai'].includes(t.toLowerCase())).map(tag => `
-                <span style="font-size: 0.75rem; color: #64748b; display: flex; align-items: center; gap: 4px;">
+                <span style="font-size: 0.75rem; color: var(--text-secondary); display: flex; align-items: center; gap: 4px;">
                   <span class="material-symbols-outlined" style="font-size: 14px;">sell</span> ${tag}
                 </span>
               `).join('')}
@@ -205,7 +205,7 @@ function renderTodos() {
 
         <div style="display: flex; gap: 0.25rem;">
            <button class="btn-ghost" onclick="editTodo('${todo.id}')" title="Edit"><span class="material-symbols-outlined">edit</span></button>
-           <button class="btn-ghost" onclick="deleteTodo('${todo.id}')" title="Delete"><span class="material-symbols-outlined" style="color: #ef4444;">delete</span></button>
+           <button class="btn-ghost" onclick="deleteTodo('${todo.id}')" title="Delete"><span class="material-symbols-outlined text-error">delete</span></button>
         </div>
       </div>
       ${index < filteredTodos.length - 1 ? '<div style="height: 1px; background: var(--border); margin: 0.25rem 1rem; opacity: 0.5;"></div>' : ''}
@@ -287,26 +287,13 @@ window.viewTodo = (id) => {
     let metaHtml = "";
     if (todo.due_date) {
         const dueStr = new Date(todo.due_date).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
-        metaHtml += `<span style="font-size: 0.75rem; color: #64748b; display: flex; align-items: center; gap: 4px; background: var(--bg-light); border: 1px solid var(--border); padding: 4px 8px; border-radius: 6px;"><span class="material-symbols-outlined" style="font-size: 14px;">calendar_today</span> ${dueStr}</span>`;
-    }
-    let prioColor = '#22c55e'; // Low default
-    let prioBg = '#dcfce7'; 
-    let prioBorder = '#bbf7d0'; 
-
-    if (todo.priority === 'High') {
-        prioColor = '#ef4444';
-        prioBg = '#fee2e2';
-        prioBorder = '#fecaca';
-    } else if (todo.priority === 'Medium') {
-        prioColor = '#eab308';
-        prioBg = '#fef9c3';
-        prioBorder = '#fef08a';
+        metaHtml += `<span style="font-size: 0.75rem; color: var(--text-secondary); display: flex; align-items: center; gap: 4px; background: var(--bg-card); border: 1px solid var(--border); padding: 4px 8px; border-radius: 6px;"><span class="material-symbols-outlined" style="font-size: 14px;">calendar_today</span> ${dueStr}</span>`;
     }
     
-    metaHtml += `<span style="font-size: 0.75rem; font-weight: 700; color: ${prioColor}; background: ${prioBg}; border: 1px solid ${prioBorder}; padding: 4px 8px; border-radius: 6px;">${todo.priority.toUpperCase()}</span>`;
+    metaHtml += `<span style="font-size: 0.75rem; font-weight: 700; padding: 4px 8px; border-radius: 6px;" class="prio-badge-${todo.priority.toLowerCase()}">${todo.priority.toUpperCase()}</span>`;
     
     todo.tags.forEach(tag => {
-        metaHtml += `<span style="font-size: 0.75rem; color: #64748b; display: flex; align-items: center; gap: 4px; background: var(--bg-light); border: 1px solid var(--border); padding: 4px 8px; border-radius: 6px;"><span class="material-symbols-outlined" style="font-size: 14px;">sell</span> ${tag}</span>`;
+        metaHtml += `<span style="font-size: 0.75rem; color: var(--text-secondary); display: flex; align-items: center; gap: 4px; background: var(--bg-card); border: 1px solid var(--border); padding: 4px 8px; border-radius: 6px;"><span class="material-symbols-outlined" style="font-size: 14px;">sell</span> ${tag}</span>`;
     });
     
     viewTaskMeta.innerHTML = metaHtml;
@@ -337,28 +324,25 @@ function renderThemeOptions() {
 function applyTheme(themeId) {
     const root = document.documentElement;
     // Clear custom overrides from root first
-    const props = ["--bg-dark", "--bg-card", "--accent", "--accent-hover", "--text-primary"];
+    const props = ["--bg-app", "--bg-sidebar", "--bg-card", "--primary", "--text-main", "--text-inverse"];
     props.forEach(p => root.style.removeProperty(p));
 
     const custom = customThemes.find(t => t.id === themeId);
     
     if (custom) {
         document.body.className = "theme-custom";
-        root.style.setProperty("--bg-dark", custom.colors.bg);
+        root.style.setProperty("--bg-app", custom.colors.bg);
+        root.style.setProperty("--bg-sidebar", custom.colors.card); // sidebar matches card in custom by default
         root.style.setProperty("--bg-card", custom.colors.card);
-        root.style.setProperty("--accent", custom.colors.accent);
-        root.style.setProperty("--text-primary", custom.colors.text);
-        root.style.setProperty("--accent-hover", custom.colors.accent + "dd");
+        root.style.setProperty("--primary", custom.colors.accent);
+        root.style.setProperty("--text-main", custom.colors.text);
     } else {
         document.body.className = themeId; // theme-light or theme-dark
     }
     
     localStorage.setItem("selected_theme", themeId);
-    // Ensure dropdown matches
     themeSelector.value = themeId;
 
-    // Update color pickers to match current theme
-    // We use document.body because presets are applied there
     const style = getComputedStyle(document.body);
     
     const toHex = (color) => {
@@ -371,10 +355,10 @@ function applyTheme(themeId) {
         }).join("");
     };
 
-    document.getElementById("theme-color-bg").value = toHex(style.getPropertyValue("--bg-dark").trim());
-    document.getElementById("theme-color-card").value = toHex(style.getPropertyValue("--bg-card").trim());
-    document.getElementById("theme-color-accent").value = toHex(style.getPropertyValue("--accent").trim());
-    document.getElementById("theme-color-text").value = toHex(style.getPropertyValue("--text-primary").trim());
+    document.getElementById("theme-color-bg").value = toHex(style.getPropertyValue("--bg-app").trim() || '#ffffff');
+    document.getElementById("theme-color-card").value = toHex(style.getPropertyValue("--bg-card").trim() || '#ffffff');
+    document.getElementById("theme-color-accent").value = toHex(style.getPropertyValue("--primary").trim() || '#1717cf');
+    document.getElementById("theme-color-text").value = toHex(style.getPropertyValue("--text-main").trim() || '#000000');
 }
 
 themeSelector.onchange = (e) => {
@@ -777,13 +761,13 @@ if (filterPriorityBtn) {
             }
             
             if (sortByPriority === 'desc') {
-                if (b1) b1.style.fill = "#ef4444";
-                if (b2) b2.style.fill = "#eab308";
-                if (b3) b3.style.fill = "#22c55e";
+                if (b1) b1.style.fill = "var(--error)";
+                if (b2) b2.style.fill = "var(--warning)";
+                if (b3) b3.style.fill = "var(--success)";
             } else {
-                if (b1) b1.style.fill = "#22c55e";
-                if (b2) b2.style.fill = "#eab308";
-                if (b3) b3.style.fill = "#ef4444";
+                if (b1) b1.style.fill = "var(--success)";
+                if (b2) b2.style.fill = "var(--warning)";
+                if (b3) b3.style.fill = "var(--error)";
             }
         } else {
             filterPriorityBtn.style.backgroundColor = "transparent";
