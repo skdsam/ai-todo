@@ -7,6 +7,7 @@ let downloadingModelId = null;
 let currentModelId = localStorage.getItem("ai_todo_model_id");
 let currentEditId = null;
 let currentFilter = "today";
+let sortByPriority = false;
 
 const chatBox = document.getElementById("chat-box");
 const aiInput = document.getElementById("sidebar-ai-input");
@@ -113,7 +114,7 @@ function renderTodos() {
   const endOfToday = new Date(now);
   endOfToday.setHours(23, 59, 59, 999);
 
-  const filteredTodos = todos.filter(todo => {
+  let filteredTodos = todos.filter(todo => {
       if (currentFilter === "completed") return todo.completed;
       if (todo.completed) return false;
 
@@ -122,6 +123,13 @@ function renderTodos() {
       if (currentFilter === "upcoming") return todo.due_date && todo.due_date > endOfToday.getTime();
       return true;
   });
+
+  if (sortByPriority) {
+      const priorityLevels = { 'High': 3, 'Medium': 2, 'Low': 1 };
+      filteredTodos = filteredTodos.sort((a, b) => {
+          return (priorityLevels[b.priority] || 0) - (priorityLevels[a.priority] || 0);
+      });
+  }
 
   if (filteredTodos.length === 0) {
       todoContainer.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 3rem 1rem;">No tasks found for this view.</div>`;
@@ -637,6 +645,21 @@ document.getElementById("nav-completed")?.addEventListener("click", () => setFil
 
 document.getElementById("add-todo-btn")?.addEventListener("click", openTaskModal);
 document.getElementById("close-task-btn")?.addEventListener("click", closeTaskModal);
+
+const filterPriorityBtn = document.getElementById("filter-priority-btn");
+if (filterPriorityBtn) {
+    filterPriorityBtn.addEventListener("click", () => {
+        sortByPriority = !sortByPriority;
+        if (sortByPriority) {
+            filterPriorityBtn.style.color = "var(--primary)";
+            filterPriorityBtn.style.backgroundColor = "var(--bg-sidebar)";
+        } else {
+            filterPriorityBtn.style.color = "var(--text-secondary)";
+            filterPriorityBtn.style.backgroundColor = "transparent";
+        }
+        renderTodos();
+    });
+}
 
 if (closeViewBtn) {
     closeViewBtn.addEventListener("click", () => {
