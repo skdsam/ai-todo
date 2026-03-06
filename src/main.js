@@ -128,7 +128,9 @@ function renderTodos() {
   if (sortByPriority) {
       const priorityLevels = { 'High': 3, 'Medium': 2, 'Low': 1 };
       filteredTodos = filteredTodos.sort((a, b) => {
-          return (priorityLevels[b.priority] || 0) - (priorityLevels[a.priority] || 0);
+          const valA = priorityLevels[a.priority] || 0;
+          const valB = priorityLevels[b.priority] || 0;
+          return sortByPriority === 'desc' ? (valB - valA) : (valA - valB);
       });
   } else if (sortByAlpha) {
       filteredTodos = filteredTodos.sort((a, b) => {
@@ -656,18 +658,40 @@ const sortAlphaBtn = document.getElementById("sort-alpha-btn");
 
 if (filterPriorityBtn) {
     filterPriorityBtn.addEventListener("click", () => {
-        sortByPriority = !sortByPriority;
+        if (!sortByPriority) {
+            sortByPriority = 'desc';
+        } else if (sortByPriority === 'desc') {
+            sortByPriority = 'asc';
+        } else {
+            sortByPriority = false;
+        }
+
+        const b1 = document.getElementById("prio-bar-1");
+        const b2 = document.getElementById("prio-bar-2");
+        const b3 = document.getElementById("prio-bar-3");
+
         if (sortByPriority) {
             sortByAlpha = false;
-            filterPriorityBtn.style.color = "var(--primary)";
             filterPriorityBtn.style.backgroundColor = "var(--bg-sidebar)";
             if (sortAlphaBtn) {
                 sortAlphaBtn.style.color = "var(--text-secondary)";
                 sortAlphaBtn.style.backgroundColor = "transparent";
             }
+            
+            if (sortByPriority === 'desc') {
+                if (b1) b1.style.fill = "#ef4444";
+                if (b2) b2.style.fill = "#eab308";
+                if (b3) b3.style.fill = "#22c55e";
+            } else {
+                if (b1) b1.style.fill = "#22c55e";
+                if (b2) b2.style.fill = "#eab308";
+                if (b3) b3.style.fill = "#ef4444";
+            }
         } else {
-            filterPriorityBtn.style.color = "var(--text-secondary)";
             filterPriorityBtn.style.backgroundColor = "transparent";
+            if (b1) b1.style.fill = "";
+            if (b2) b2.style.fill = "";
+            if (b3) b3.style.fill = "";
         }
         renderTodos();
     });
@@ -683,6 +707,12 @@ if (sortAlphaBtn) {
             if (filterPriorityBtn) {
                 filterPriorityBtn.style.color = "var(--text-secondary)";
                 filterPriorityBtn.style.backgroundColor = "transparent";
+                const b1 = document.getElementById("prio-bar-1");
+                const b2 = document.getElementById("prio-bar-2");
+                const b3 = document.getElementById("prio-bar-3");
+                if (b1) b1.style.fill = "";
+                if (b2) b2.style.fill = "";
+                if (b3) b3.style.fill = "";
             }
         } else {
             sortAlphaBtn.style.color = "var(--text-secondary)";
