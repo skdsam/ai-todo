@@ -516,7 +516,18 @@ Always reply in valid JSON if actions are needed. Otherwise, just reply with a "
       if (data.suggested_actions && Array.isArray(data.suggested_actions)) {
         for (const action of data.suggested_actions) {
           if (action.type === "CreateTask") {
-            const due_date = action.data.due_date ? new Date(action.data.due_date).getTime() : null;
+            let due_date = null;
+            if (action.data.due_date) {
+                // Best effort local midnight parse if AI gives just YYYY-MM-DD
+                const val = action.data.due_date;
+                if (val.length === 10) { 
+                    const [y, m, d] = val.split('-');
+                    due_date = new Date(y, m - 1, d).getTime();
+                } else {
+                    due_date = new Date(val).getTime();
+                }
+            }
+
             const newTodo = {
               id: crypto.randomUUID(),
               title: action.data.title,
